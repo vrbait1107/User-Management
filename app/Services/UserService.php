@@ -24,10 +24,10 @@ class UserService
         $cacheKey = "users_page_{$perPage}_page_{$currentPage}";
 
         if (Cache::has($cacheKey)) {
-            return Cache::get($cacheKey);
+           return Cache::get($cacheKey);
         }
 
-        $users = User::paginate($perPage);
+        $users = User::select('id', 'name', 'email')->paginate($perPage);
 
         $userIds = $users?->pluck('id')?->toArray();
 
