@@ -18,16 +18,21 @@ class Authentication
 
         $apiKey = env('AUTHENTICATION_API_KEY');
         $token = $request->bearerToken();
-        
+
         if (!$token) {
-            return response()->json(['success' => false, 'message' => 'Token not provided'], 400);
+            return response()->json([
+                'success' => false,
+                'message' => 'Token not provided'
+            ], 400);
         }
 
         if ($token !== $apiKey) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
         }
 
         return $next($request);
-
     }
 }

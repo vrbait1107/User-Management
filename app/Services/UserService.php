@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Services;
+
 use App\BusinessObjects\UserBO;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
@@ -13,9 +15,13 @@ class UserService
         $this->userBO = $userBO;
     }
 
-    public function index(int $perPage = 15)
+    public function index(int $perPage = 15, int $currentPage = 1)
     {
-        $cacheKey = 'users_all_page_' . $perPage;
+
+        $currentPage = !empty(request()->page) ? request()->page : $currentPage;
+        $perPage = !empty(request()->per_page) ? request()->per_page : $perPage;
+
+        $cacheKey = "users_page_{$perPage}_page_{$currentPage}";
 
         if (Cache::has($cacheKey)) {
             return Cache::get($cacheKey);
@@ -23,35 +29,30 @@ class UserService
 
         $users = User::paginate($perPage);
 
-        Cache::put($cacheKey, $users, now()->addMinutes(10));
+        $userIds = $users?->pluck('id')?->toArray();
+
+        Cache::tags($userIds)->put($cacheKey, $users, now()->addMinutes(10));
 
         return $users;
     }
 
     public function create(array $data)
     {
-        $cacheKey = 'user_' . $data['email'];
-        if (Cache::has($cacheKey)) {
-            return Cache::get($cacheKey);
-        }
 
         $user = $this->userBO->create($data);
+
+        $cacheKey = 'user_' . $user->id;
+
         Cache::put($cacheKey, $user, now()->addMinutes(10));
+
         return $user;
     }
 
     public function update(User $user, array $data)
     {
-        Cache::forget('user_' . $user->email);
+        Cache::forget("user_{$user->id}");
+        Cache::tags($user->id)->flush();
+
         return $this->userBO->update($user, $data);
-    }
-
-    public function get($id)
-    {
-        $cacheKey = 'user_' . $id;
-
-        return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($id) {
-            return User::findOrFail($id);
-        });
     }
 }

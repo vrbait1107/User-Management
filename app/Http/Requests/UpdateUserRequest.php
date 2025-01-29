@@ -8,7 +8,7 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 
-class UserRequest extends FormRequest
+class UpdateUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -18,9 +18,14 @@ class UserRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $this->user,
-            'password' => ['required', 'string', 'min:8', Password::min(8)->letters()->mixedCase()->numbers()->symbols()],
+            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|unique:users,email,' . $this->user,
+            'password' => [
+                'nullable',
+                'string',
+                'min:8',
+                Password::min(8)->letters()->mixedCase()->numbers()->symbols(),
+            ],
         ];
     }
 
